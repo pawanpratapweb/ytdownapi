@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube Video Downloader</h1>
+    <input type="text" id="videoUrl" placeholder="Enter YouTube Video ID or URL">
+    <button id="fetchButton">Get Video Info</button>
+    
+    <div class="result" id="resultContainer"></div>
+
+    <script>
+        document.getElementById('fetchButton').addEventListener('click', async () => {
+            const videoUrl = document.getElementById('videoUrl').value;
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = '';
+
+            if (!videoUrl) {
+                resultContainer.innerHTML = '<p style="color:red;">Please enter a Video ID or URL.</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/video?url=${encodeURIComponent(videoUrl)}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultContainer.innerHTML = `<h2>${data.videoMetadata.title}</h2>
+                                                 <p>${data.videoMetadata.description}</p>
+                                                 <img src="${data.videoMetadata.thumbnailUrl}" alt="Thumbnail" style="max-width:100%;">
+                                                 <h3>Available Formats:</h3>`;
+                    data.formats.forEach(format => {
+                        resultContainer.innerHTML += `<div>
+                            <p><strong>Quality:</strong> ${format.qualityLabel}</p>
+                            <p><strong>MIME Type:</strong> ${format.mimeType}</p>
+                            <p><strong>Bitrate:</strong> ${format.bitrate ? format.bitrate + ' kbps' : 'N/A'}</p>
+                            <a href="${format.url}" target="_blank" download>Download</a>
+                            </div><hr>`;
+                    });
+                } else {
+                    resultContainer.innerHTML = `<p style="color:red;">${data.error}</p>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultContainer.innerHTML = '<p style="color:red;">Failed to fetch video information.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
